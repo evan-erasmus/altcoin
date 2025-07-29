@@ -1,0 +1,66 @@
+version: '3.9'
+
+services:
+  mariadb:
+    image: mariadb:11.4
+    container_name: crypto_mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: crypto_db
+      MYSQL_USER: crypto_user
+      MYSQL_PASSWORD: crypto_pass
+    ports:
+      - 3306:3306
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  redis:
+    image: redis:7.2
+    container_name: crypto_redis
+    restart: always
+    ports:
+      - 6379:6379
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build: ./backend
+    container_name: crypto_backend
+    restart: always
+    ports:
+      - 5000:5000
+    environment:
+      DB_HOST: mariadb
+      DB_USER: crypto_user
+      DB_PASSWORD: crypto_pass
+      DB_NAME: crypto_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      API_BASE_URL: https://api.coingecko.com/api/v3
+    depends_on:
+      - mariadb
+      - redis
+    volumes:
+      - ./backend:/usr/src/app
+    command: npm run dev
+
+  frontend:
+    build: ./frontend
+    container_name: crypto_frontend
+    restart: always
+    ports:
+      - 3000:3000
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/usr/src/app
+    environment:
+      REACT_APP_API_URL: http://localhost:5000/api
+    command: npm start
+
+volumes:
+  mariadb_data:
+  redis_data:
+
