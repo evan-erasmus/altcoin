@@ -9,7 +9,7 @@ const redis = require('./services/redis.service');
 const cryptoRoutes = require('./routes/crypto.routes');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 
 
 app.use(helmet());
@@ -18,17 +18,12 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 
-app.use('/api/cryptos', cryptoRoutes);
-app.use('/redis', (req, res) => {
-  res.json({
-    // all redis cached data:
-    keys: redis.redisClient.keys('*'),
-  })
-});
+app.use('/api/crypto', cryptoRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', time: new Date() });
 });
+
 
 app.listen(PORT, async () => {
   await db.setupDatabase();

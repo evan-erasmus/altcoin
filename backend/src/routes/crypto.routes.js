@@ -4,35 +4,62 @@ const db = require('../services/db.service');
 const redis = require('../services/redis.service');
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+// get live cryptocurrency data
+router.get('/live', async (req, res) => {
   try {
     // check cache
-    const cachedCoins = await redis.getCache('coin-data');
+    const cachedCoins = await redis.getCache('coin-price');
 
     if (cachedCoins) {
       return res.json(JSON.parse(cachedCoins));
     }
-    console.log('  REDIS: No cached coins found, querying external API...');
 
     // if not found in cache, query teh external api
     const response = await axios.get('https://api.coingecko.com/api/v3/coins/markets?vs_currency=zar&ids=bitcoin,ethereum,litecoin');
     const newCoinData = response.data;
 
     // save new data to cache and db
-    redis.setCache('coin-data', newCoinData);
+    redis.setCache('coin-price', newCoinData);
     newCoinData.forEach(async (i) => {
       const cryptoId = await db.getCryptoId(i);
       await db.insertHistory(cryptoId, i);
     });
 
-    res.json(newCoinData);
+    return res.json(newCoinData);
   } catch(err) {
-    res.status(500).send({
+    return res.status(500).send({
       message: 'Internal Server Error.'
     });
   }
 });
 
+
+//return a list of coins
+router.get('/coins', async (req, res) => {
+  try {
+    const cachedCoins = await redis.getCache('coin-data');
+
+    if (cachedCoins) {
+      return res.json(JSON.parse(cachedCoins));
+    }
+
+    const dbCoinData = await db.getAllCryptos();
+    if (dbCoinData && dbCoinData.length > 0) {
+      redis.setCache('coin-data', dbCoinData, 3600);
+      return res.json(dbCoinData);
+    }
+
+    return res.status(404).send({
+      message: 'No cryptocurrencies found.'
+    });
+  } catch(err) {
+    return res.status(500).send({
+      message: 'Internal Server Error.'
+    });
+  }
+});
+
+//get historical data for a single coin
 router.get('/history/:id', async (req, res) => {
   try {
     const { start, end } = req.query;
@@ -62,10 +89,9 @@ router.get('/history/:id', async (req, res) => {
       });
     }
 
-    res.json(history);
+    return res.json(history);
   } catch (err) {
-    console.error('Error fetching history:', err);
-    res.status(500).send({
+    return res.status(500).send({
       message: 'Internal Server Error.'
     });
   }

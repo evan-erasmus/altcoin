@@ -1,10 +1,10 @@
 const mariadb = require('mariadb');
 
 const pool = mariadb.createPool({
-  host: process.env.DB_HOST || 'mariadb',
-  user: process.env.DB_USER || 'crypto_user',
-  password: process.env.DB_PASSWORD || 'crypto_pass',
-  database: process.env.DB_NAME || 'crypto_db',
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   connectionLimit: 5
 });
 
@@ -126,4 +126,15 @@ async function getHistory(cryptoId, startDate, endDate) {
   return await query(sql, [internalId[0].id, startDate, endDate]);
 }
 
-module.exports = { getCryptoId, insertHistory, getHistory, setupDatabase, query, pool };
+async function getAllCryptos() {
+  const sql = `
+    SELECT *
+    FROM cryptocurrencies
+    ORDER BY name ASC
+  `;
+
+  return await query(sql);
+}
+
+
+module.exports = { getAllCryptos, getCryptoId, insertHistory, getHistory, setupDatabase, query, pool };
