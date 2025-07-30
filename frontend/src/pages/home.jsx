@@ -27,8 +27,6 @@ const Home = () => {
         .then((data) => {
           fetchLive();
           fetchCoins();
-
-          console.log('Cache deleted:', data);
         })
         .catch(console.error);
 
