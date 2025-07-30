@@ -39,6 +39,9 @@
      - If ?start and ?end are present, selects history for coins between date range
      - If no date ranges are passed, selects all history
      - History is not cached by redis
+   - /api/crypto/cache
+     - Clears redis cache
+     - if ?key is provided, only clears that key
 
 ### Cache
  - Redis on default port
