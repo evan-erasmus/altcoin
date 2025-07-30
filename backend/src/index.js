@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const axios = require('axios');
 
 const db = require('./services/db.service');
 const redis = require('./services/redis.service');
@@ -29,5 +30,14 @@ app.listen(PORT, async () => {
   await db.setupDatabase();
   await redis.connect();
   console.log('running on port: ' + PORT);
+
+  setInterval(async () => {
+    try {
+      await axios.get('http://localhost:5000/api/crypto/live');
+      console.log('data updated');
+    } catch (error) {
+      console.error('External api err:', error);
+    }
+  }, 30000);
 });
 
