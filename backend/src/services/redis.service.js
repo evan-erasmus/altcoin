@@ -9,7 +9,7 @@ const redisClient = createClient({
   url: redisString
 });
 
-redisClient.on('error', (err) => console.error('Redis Client Error', err));
+redisClient.on('error', (err) => console.error('Redis error: ', err));
 
 async function connect() {
   if (!redisClient.isOpen) {

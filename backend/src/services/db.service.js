@@ -41,7 +41,7 @@ async function setupDatabase() {
       await query(sql);
     });
   } catch (err) {
-    console.error('Error setting up database:', err);
+    console.error('Error in db setup:', err);
   }
 }
 
