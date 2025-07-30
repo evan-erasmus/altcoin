@@ -1,5 +1,5 @@
 import GlassCard from '../components/glass-card';
-import { getCryptoList, getLiveCryptoData } from '../api/requests';
+import { getCryptoList, getLiveCryptoData, deleteRedisCache } from '../api/requests';
 import { useEffect, useState } from 'react';
 import CoinChart from '../components/coin-chart';
 import CoinSummary from '../components/coin-summary';
@@ -11,20 +11,41 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getLiveCryptoData()
-      .then(data => setLiveData(data))
-      .catch(console.error);
-
-    getCryptoList()
-      .then(data => setCoins(data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-
-    const interval = setInterval(() => {
+    const fetchLive = () =>
       getLiveCryptoData()
         .then(data => setLiveData(data))
         .catch(console.error);
-    }, 10000);
+
+    const fetchCoins = () =>
+      getCryptoList()
+        .then(data => setCoins(data))
+        .catch(console.error)
+        .finally(() => setLoading(false));
+
+    const deleteCache = () =>
+      deleteRedisCache()
+        .then((data) => {
+          fetchLive();
+          fetchCoins();
+
+          console.log('Cache deleted:', data);
+        })
+        .catch(console.error);
+
+    fetchLive();
+    fetchCoins();
+
+    const interval = setInterval(() => {
+      setCoins(prevCoins => {
+        if (prevCoins.length < 3) {
+          deleteCache();
+        } else {
+          fetchLive();
+          fetchCoins();
+        }
+        return prevCoins;
+      });
+    }, 5000);
 
     return () => clearInterval(interval);
   }, []);

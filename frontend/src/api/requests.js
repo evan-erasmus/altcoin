@@ -31,3 +31,13 @@ export const getCryptoHistory = async (cryptoId) => {
     throw error;
   }
 }
+
+export const deleteRedisCache = async () => {
+  try {
+    const response = await axios.delete(`${API_URL}/cache`);
+    return response.data;
+  } catch (error) {
+    console.error('Api err:', error);
+    throw error;
+  }
+}
