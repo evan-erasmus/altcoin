@@ -27,6 +27,7 @@ router.get('/live', async (req, res) => {
 
     return res.json(newCoinData);
   } catch(err) {
+    console.error('Error fetching live crypto data:', err);
     return res.status(500).send({
       message: 'Internal Server Error.'
     });
@@ -94,6 +95,28 @@ router.get('/history/:id', async (req, res) => {
     return res.status(500).send({
       message: 'Internal Server Error.'
     });
+  }
+});
+
+// clear cache
+router.delete('/cache', async (req, res) => {
+  console.log('Clearing cache...');
+  try {
+    const { key } = req.query;
+
+    if (key) {
+      await redis.redisClient.del(key);
+      return res.json({ message: `Cache key "${key}" deleted successfully` });
+    } else {
+      const keys = await redis.redisClient.keys('*');
+      if (keys.length > 0) {
+        await redis.redisClient.del(keys);
+      }
+      return res.json({ message: 'All cache cleared successfully' });
+    }
+  } catch (err) {
+    console.error('Error clearing cache:', err);
+    return res.status(500).json({ message: 'Failed to clear cache' });
   }
 });
 
