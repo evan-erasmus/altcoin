@@ -33,7 +33,7 @@ app.listen(PORT, async () => {
 
   setInterval(async () => {
     try {
-      await axios.get('http://localhost:5000/api/crypto/live');
+      await axios.get('http://crypto_backend:5000/api/crypto/live');
       console.log('data updated');
     } catch (error) {
       console.error('External api err:', error);
